@@ -100,7 +100,7 @@
     x: [0], y: [0], z: [0.1],
     mode: 'markers', type: 'scatter3d',
     name: '原点 (鞍点)',
-    marker: { size: 8, color: '#39FF14', symbol: 'circle' }
+    marker: { size: 2, color: '#39FF14', symbol: 'circle' }
   };
 
   const layout = {
@@ -109,9 +109,9 @@
     showlegend: true,
     legend: { x: 0, y: 1 },
     scene: {
-      xaxis: { title: { text: '<i>x</i>' }, range: [-range, range] },
-      yaxis: { title: { text: '<i>y</i>' }, range: [-range, range] },
-      zaxis: { title: { text: '<i>z</i>' }, range: [zRangeMin, zRangeMax] },
+      xaxis: { title: { text: 'x' }, range: [-range, range] },
+      yaxis: { title: { text: 'y' }, range: [-range, range] },
+      zaxis: { title: { text: 'z' }, range: [zRangeMin, zRangeMax] },
       aspectmode: 'cube',
       camera: {
         center: cameraCenter,
