@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>4次曲面 z = x⁴ + y⁴ - 2(x-y)²</title>
+  <script type="text/javascript" async
+    src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script>
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <style>
+    body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    #plot { width: 90vw; height: 90vh; }
+  </style>
+</head>
+<body>
+
+<div id="plot"></div>
+
+<script>
+  const size = 120;
+  const x = [], y = [], z = [];
+  const range = 2.0;
+
+  for (let i = 0; i < size; i++) {
+    x[i] = -range + (2 * range * i) / (size - 1);
+    y[i] = -range + (2 * range * i) / (size - 1);
+  }
+
+  let zDataMin = Infinity, zDataMax = -Infinity;
+  for (let i = 0; i < size; i++) {
+    z[i] = [];
+    for (let j = 0; j < size; j++) {
+      const xi = x[j];
+      const yj = y[i];
+      const zij = Math.pow(xi, 4) + Math.pow(yj, 4) - 2 * Math.pow(xi - yj, 2);
+      z[i][j] = zij;
+      if (zij < zDataMin) zDataMin = zij;
+      if (zij > zDataMax) zDataMax = zij;
+    }
+  }
+
+  // ズームしても鞍点(原点)が視界から外れないようにするための設定
+  // Plotlyは各軸レンジを内部的に -1〜1 に正規化して camera.center/eye の
+  // 座標系として扱うため、原点がそのレンジの中でどの位置にあるかに
+  // 合わせて center を計算する
+  const zRangeMin = zDataMin;   // 谷（負の値）はそのまま見せる
+  const zRangeMax = 8;          // ここを小さくするほど四隅の立ち上がりが切れて鞍点付近が大きく見える
+
+  function toNormalized(v, lo, hi) {
+    return -1 + 2 * (v - lo) / (hi - lo);
+  }
+  const cameraCenter = {
+    x: toNormalized(0, -range, range),
+    y: toNormalized(0, -range, range),
+    z: toNormalized(0, zRangeMin, zRangeMax)
+  };
+
+  // 1. 曲面本体
+  const surfaceData = {
+    z: z, x: x, y: y,
+    type: 'surface',
+    opacity: 0.8,
+    colorscale: 'Viridis',
+    contours: {
+      x: { show: true, color: 'rgba(0,0,0,0.5)', width: 1, start: -2.0, end: 2.0, size: 0.2 },
+      y: { show: true, color: 'rgba(0,0,0,0.5)', width: 1, start: -2.0, end: 2.0, size: 0.2 }
+    }
+  };
+
+  // 2. 直線 y = x に沿った曲面上の 3D 線（赤）
+  const line1X = [], line1Y = [], line1Z = [];
+  for (let t = -1.8; t <= 1.8; t += 0.05) {
+    line1X.push(t);
+    line1Y.push(t);
+    line1Z.push(2 * Math.pow(t, 4) + 0.05); // 埋没防止の微小オフセット
+  }
+  const lineYeqX = {
+    x: line1X, y: line1Y, z: line1Z,
+    type: 'scatter3d', mode: 'lines',
+    name: 'y = x',
+    line: { color: 'red', width: 6 }
+  };
+
+  // 3. 直線 y = -x に沿った曲面上の 3D 線（青）
+  const line2X = [], line2Y = [], line2Z = [];
+  for (let t = -1.8; t <= 1.8; t += 0.05) {
+    line2X.push(t);
+    line2Y.push(-t);
+    line2Z.push(2 * Math.pow(t, 4) - 8 * Math.pow(t, 2) + 0.05);
+  }
+  const lineYeqNegX = {
+    x: line2X, y: line2Y, z: line2Z,
+    type: 'scatter3d', mode: 'lines',
+    name: 'y = -x',
+    line: { color: 'dodgerblue', width: 6 }
+  };
+
+  // 4. 原点 (0,0,0) マーカー
+  const originPointData = {
+    x: [0], y: [0], z: [0.1],
+    mode: 'markers', type: 'scatter3d',
+    name: '原点 (鞍点)',
+    marker: { size: 8, color: '#39FF14', symbol: 'circle' }
+  };
+
+  const layout = {
+    title: { text: '$\\text{曲面 } z = x^4 + y^4 - 2(x - y)^2$' },
+    autosize: true,
+    showlegend: true,
+    legend: { x: 0, y: 1 },
+    scene: {
+      xaxis: { title: { text: '<i>x</i>' }, range: [-range, range] },
+      yaxis: { title: { text: '<i>y</i>' }, range: [-range, range] },
+      zaxis: { title: { text: '<i>z</i>' }, range: [zRangeMin, zRangeMax] },
+      aspectmode: 'cube',
+      camera: {
+        center: cameraCenter,
+        eye: { x: 1.3, y: -1.3, z: 1.0 }
+      }
+    }
+  };
+
+  Plotly.newPlot('plot', [surfaceData, lineYeqX, lineYeqNegX, originPointData], layout);
+</script>
+
+</body>
+</html>
